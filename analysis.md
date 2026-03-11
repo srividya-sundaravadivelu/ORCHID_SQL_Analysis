@@ -10,16 +10,22 @@ Using a trigger ensures donor_type is always kept in sync with  fields brain_dea
 
 ### SQL Query
 ```sql
+-- 1. Add donor_type column if it doesn't exist
 ALTER TABLE referrals 
 ADD COLUMN IF NOT EXISTS donor_type text;
 
+---------------------------------------------------------
+-- 2. Create trigger function to set donor_type
+---------------------------------------------------------
 CREATE OR REPLACE FUNCTION set_donor_type()
 RETURNS trigger AS $$
 BEGIN
     IF NEW.brain_death = TRUE THEN
         NEW.donor_type := 'DBD';
+
     ELSIF NEW.time_asystole IS NOT NULL THEN
         NEW.donor_type := 'DCD';
+
     ELSE
         NEW.donor_type := 'Unknown';
     END IF;
@@ -28,17 +34,31 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
-CREATE OR REPLACE trigger donor_type_trigger
+---------------------------------------------------------
+-- 3. Create trigger (fires BEFORE UPDATE)
+---------------------------------------------------------
+CREATE OR REPLACE TRIGGER donor_type_trigger
 BEFORE UPDATE ON referrals
 FOR EACH ROW 
 EXECUTE FUNCTION set_donor_type();
 
-SELECT donor_type from referrals;
+---------------------------------------------------------
+-- 4. Force trigger to run on all existing rows
+--    (this is REQUIRED to populate donor_type)
+---------------------------------------------------------
+UPDATE referrals
+SET donor_type = donor_type;
+
+---------------------------------------------------------
+-- 5. Verify results
+---------------------------------------------------------
+SELECT donor_type, COUNT(*) 
+FROM referrals
+GROUP BY donor_type;
 
 ```
 ### Results
-![alt text](image-36.png)
+![alt text](query-1.png)
 
 ## 2. ETL - Computing Organ Recovery and Transplantation Fields
 
