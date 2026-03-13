@@ -340,7 +340,47 @@ group by circumstances_of_death;
 ##### Results
 ![alt text](image-63.png)
 
-## 5. Gender distribution in the referrels dataset
+## 5. ETL - Indexing to improve query performance
+
+### Reasoning
+Indexing improves query performance in analytical dataset. In the ORCHID dataset, columns like opo, donor_type, referral_year etc.  are used repeatedly for filtering and grouping. Creating indexes on these high‑traffic columns ensures that queries remain fast and efficient.
+
+### SQL Query
+```sql
+-- 1. OPO
+CREATE INDEX idx_referrals_opo
+ON referrals(opo);
+
+-- 2. Hospital ID
+CREATE INDEX idx_referrals_hospitalid
+ON referrals(hospitalid);
+
+-- 3. Donor Type (DBD/DCD)
+CREATE INDEX idx_referrals_donor_type
+ON referrals(donor_type);
+
+-- 4. Referral Year
+CREATE INDEX idx_referrals_referral_year
+ON referrals(referral_year);
+
+-- 5. Procured Year
+CREATE INDEX idx_referrals_procured_year
+ON referrals(procured_year);
+
+-- 6. Time Referred (timestamp)
+CREATE INDEX idx_referrals_time_referred
+ON referrals(time_referred);
+
+-- 7. opo, referral year
+CREATE INDEX idx_referrals_opo_year
+ON referrals(opo, referral_year);
+
+```
+### Results
+![alt text](image-82.png)
+
+
+## 6. Gender distribution in the referrels dataset
 
 ### Reasoning
 This query reveals the gender distribution including missing values which is essential for data quality validation and any analyses that rely on gender.
@@ -357,7 +397,7 @@ group by gender
 ### Results
 ![alt text](image-10.png)
 
-## 6. Race distribution 
+## 7. Race distribution 
 
 ### Reasoning
 This query reveals the race distribution including missing values which is essential for data quality validation and any analyses that rely on race.
@@ -372,7 +412,7 @@ group by race
 ### Results
 ![alt text](image-3.png)
 
-## 7. Cause of death distribution
+## 8. Cause of death distribution
 
 ### Reasoning
 This query reveals the cause of death distribution including missing values which is essential for data quality validation and any analyses that rely on cause of death.
@@ -387,7 +427,7 @@ order by cause_of_death_distribution DESC
 ### Results
 ![alt text](image-11.png)
 
-## 8. Referral volumes by OPO and Year
+## 9. Referral volumes by OPO and Year
 
 ### Reasoning
 This query provides a view of how referral activity changes over time for each OPO. By counting referrals by OPO × year, it becomes easy to spot trends such as growth, decline, or sudden shifts in referral volume. 
@@ -402,7 +442,7 @@ This query provides a view of how referral activity changes over time for each O
 ### Results
 ![alt text](image-5.png)
 
-## 9. How many referrals fall into predefined age categories?
+## 10. How many referrals fall into predefined age categories?
 
 ### Reasoning  
 This query uses predefined age groups (e.g., Under 18, 18–45, 46–60, 61–74, 75+) to show how referrals are distributed across these age groups.
@@ -419,7 +459,7 @@ ORDER BY age_group;
 ### Results
 ![alt text](image-6.png)
 
-## 10. How is age distributed across the entire population?
+## 11. How is age distributed across the entire population?
 ### Reasoning
 This query divides the population into four equally sized age groups NTILES(4) based on the underlying distribution of age. Instead of relying on predefined age groups, it shows how age is spread across the population and where the “younger” and “older” segments fall in relative terms. 
 
@@ -446,7 +486,7 @@ ORDER BY age_quartile;
 ### Insight
 The distribution is right‑skewed (older-heavy).
 
-## 11. Analysis of Donation Rate Using Actual Donors and  modeled eligible deaths
+## 12. Analysis of Donation Rate Using Actual Donors and  modeled eligible deaths
 
 ### Reasoning
 The donation rate compares actual donors to modeled eligible deaths to measure how well an OPO converts potential donors into actual donors. Donation rate uses modeled eligible deaths because they represent the true potential donor pool in the entire OPO service area, not just the referrals that were documented. Actual eligible deaths depend on referral behavior and documentation quality, so they cannot be used as the denominator. The modeled value ensures fair comparisons across OPOs and avoids rewarding under‑referral or poor documentation.
@@ -507,7 +547,7 @@ SELECT * FROM DONATION_RATES_VIEW;
 ![alt text](image-1.png)
 
 
-## 12. Ranking OPOs by Donation Rate
+## 13. Ranking OPOs by Donation Rate
 
 ### Reasoning
 This query ranks OPOs by their donation rate within each year, allowing us to compare performance across organizations during the same time period.
@@ -530,7 +570,7 @@ ORDER BY year, performance_rank;
 ### Results
 ![alt text](image-8.png)
 
-## 13. Full operational‑pipeline profile for every OPO and year
+## 14. Full operational‑pipeline profile for every OPO and year
 
 ### Reasoning
 This query shows how referrals move through each stage of the donation process: approach, authorization, procurement, and transplantation.Because the pipeline is sequential, each rate answers a different operational question—approach rate reflects hospital engagement, authorization rate reflects family consent effectiveness, procurement rate reflects clinical suitability and OR coordination, and transplant rate reflects placement and utilization. The final overall pipeline rate summarizes the entire process into a single, interpretable metric. 
@@ -579,7 +619,7 @@ ORDER BY opo, referral_year;
 ![alt text](image-9.png)
 
 
-## 14. Year‑over‑Year Donation Rate Trends
+## 15. Year‑over‑Year Donation Rate Trends
 
 ### Reasoning
 This yoy trend view is essential because donation rate alone shows only a single year’s performance; YoY trends reveal whether an OPO is consistently improving, fluctuating, or experiencing sustained decline.
@@ -616,7 +656,7 @@ ORDER BY opo, year;
 ### Results
 ![alt text](image-12.png)
 
-## 15. Referral volume by day of week 
+## 16. Referral volume by day of week 
 
 ### Reasoning
 This query identifies how referral activity varies across the days of the week, revealing operational patterns that remain meaningful even in a date‑shifted dataset.These patterns are important for understanding staffing needs and anticipating workload fluctuations.
@@ -633,7 +673,7 @@ ORDER BY referral_volume DESC;
 ### Results
 ![alt text](image-13.png)
 
-## 16. Donor workflow timing
+## 17. Donor workflow timing
 
 ### Reasoning
 This query standardizes all donor‑workflow timestamps and computes the key operational intervals needed to analyze referral‑to‑procurement efficiency.
@@ -682,7 +722,7 @@ SELECT * FROM DONOR_TIMINGS_VIEW;
 ### Results
 ![alt text](image-37.png)
 
-## 17. Median Operational Timing Intervals for donors By opo.
+## 18. Median Operational Timing Intervals for donors By opo.
 
 ### Reasoning
 This query summarizes each OPO’s operational efficiency by calculating the median duration of every major donor‑workflow interval. Medians are used because timing data is highly skewed. 
@@ -710,7 +750,7 @@ ORDER BY opo;
 ### Insights
 Asystole‑to‑procurement intervals are near‑zero for all OPOs, showing how quickly DCD donors must be taken to organ donation after circulatory arrest.
 
-## 18. Indexing Donation Rates to see growth over time
+## 19. Indexing Donation Rates to see growth over time
 
 ### Reasoning
 This query expresses each OPO’s donation rate relative to its first available year.This allows us to measure growth over time on a normalized scale. The baseline year is converted to an index of 100 and all subsequent years show percentage change rather than raw rate differences, making trends easier to compare across OPOs.
@@ -757,7 +797,7 @@ ORDER BY opo, year;
 ### Insights
 Indexed donation rates show that OPO3 experienced the strongest improvement over the dataset period, rising from baseline (100) to 176 by 2020—a 76% relative increase.
 
-## 19. Rolling 3‑Year Donation Rate Trends to Assess OPO Performance Stability
+## 20. Rolling 3‑Year Donation Rate Trends to Assess OPO Performance Stability
 
 ### Reasoning
 This query smooths year‑to‑year fluctuations in donation rates by calculating a rolling 3‑year average for each OPO.  Because donation rates can swing sharply due to small denominators, unusual clinical years, or operational variability, the rolling window highlights the underlying performance trend rather than isolated spikes.
@@ -786,7 +826,7 @@ ORDER BY opo, year;
 ### Insights
 A 3‑year rolling average of donation rates shows that OPO3’s improvement is not a one‑year anomaly but a sustained upward trend across the dataset period. 
 
-## 20. Cohort Analysis of Referral‑Year Groups
+## 21. Cohort Analysis of Referral‑Year Groups
 
 ### Reasoning
 This query groups referrals into cohorts based on the year they entered the system, allowing us to track how each referral‑year group moves through the donation pipeline.  By calculating approach, authorization, and conversion rates for each cohort, we can see whether newer cohorts perform better than older ones and identify long‑term operational trends. 
@@ -825,7 +865,7 @@ ORDER BY opo, cohort_year;
 ### Results
 ![alt text](image-23.png)
 
-## 21. Data‑Quality and Anomaly Detection in Referral Records
+## 22. Data‑Quality and Anomaly Detection in Referral Records
 
 ### Reasoning
 This query checks whether key timestamps in the referral workflow follow a logical order and flags records where the sequence is impossible or inconsistent. These anomalies usually indicate documentation errors or missing data, so identifying them helps improve data quality before running operational or timing‑based analyses.
@@ -877,7 +917,7 @@ WHERE
 ### Results
 ![alt text](image-24.png)
 
-## 22. Conversion rate comparison for brain_death (DBD) and asystole (DCD)
+## 23. Conversion rate comparison for brain_death (DBD) and asystole (DCD)
 
 ### Reasoning
 This query highlights the conversion rate comparison for DBD and DCD. 
@@ -905,7 +945,7 @@ GROUP BY donor_type;
 ### Insights
 DBD donors have higher approach, authorization, procurement, and transplant rates. DCD donors often face time‑sensitive physiology and more variable hospital practices, which reduces conversion at multiple stages.
 
-## 23. Organs procured but not transplanted
+## 24. Organs procured but not transplanted
 
 ### Reasoning
 This query exposes lost transplant opportunities, enabling deeper investigation into why recovered organs were not used.
@@ -933,7 +973,7 @@ WHERE procured = TRUE
 ### Results
 ![alt text](image-27.png)
 
-## 24. Donors that had at least one organ recovered but no organs transplanted, and how many such cases occurred per OPO
+## 25. Donors that had at least one organ recovered but no organs transplanted, and how many such cases occurred per OPO
 
 ### Reasoning
 This query highlights donors whose organs were recovered but never transplanted, exposing OPO‑level operational issues.
@@ -957,7 +997,7 @@ ORDER BY recovered_but_zero_tx DESC;
 ### Results
 ![alt text](image-45.png)
 
-## 25. Organ Utilization and Performance Ranking by Any Grouping Category
+## 26. Organ Utilization and Performance Ranking by Any Grouping Category
 
 ### Reasoning
 This query provides a standardized way to evaluate organ‑utilization performance across any category, making it easy to compare hospitals, OPOs, age groups, or donor types using the same consistent metrics.
@@ -1120,7 +1160,7 @@ SELECT * FROM organ_utilization_by('circumstances_of_death');
 ![alt text](image-64.png)
 
 
-## 26. For each age_group, how many donors are DBD vs DCD side‑by‑side in columns : age_group | DBD_donors | DCD_donors |
+## 27. For each age_group, how many donors are DBD vs DCD side‑by‑side in columns : age_group | DBD_donors | DCD_donors |
 
 ### Reasoning
 This query provides a clear side‑by‑side comparison of DBD and DCD donor counts within each age_group. Presenting both donor types in columns supports faster interpretation and is ideal for dashboards and summaries.
@@ -1157,7 +1197,7 @@ FROM crosstab(
 ### Results
 ![alt text](image-47.png)
 
-## 27. Donor Funnel Analysis Across OPOs using Recursive CTE
+## 28. Donor Funnel Analysis Across OPOs using Recursive CTE
 
 ### Reasoning
 This query transforms raw referral outcomes into a structured, stage‑by‑stage donor funnel for each OPO, making it easy to see where potential donors are lost across the pipeline.
@@ -1213,7 +1253,7 @@ ORDER BY opo, stage;
 ### Results
 ![alt text](image-48.png)
 
-## 28. Tissue and Eye Referral Performance by Any Grouping Category
+## 29. Tissue and Eye Referral Performance by Any Grouping Category
 
 ### Reasoning
 This query provides a flexible way to analyze tissue and eye referral patterns across any category—such as hospital, OPO, age group, cause of death, or donor type. 
@@ -1357,6 +1397,126 @@ SELECT * FROM tissue_eye_by('abo_rh');
 
 ##### Results
 ![alt text](image-67.png)
+
+## 30. A Reusable SQL Outlier‑Detection Function for Any Table or View
+
+### Reasoning
+The dataset contains demographic and timestamp‑based fields which are prone to extreme or impossible values. These outliers can distort averages and performance metrics. So a consistent method for identifying outliers is essential. This query uses percentile‑based detection (1st and 99th percentiles) of outliers.
+
+### Optimization
+This query works for both tables and views. By parameterizing the relation name, the function supports tables as well as views. This avoids duplicating logic. Using format() with %I placeholders ensures that column names and table/view names are safely injected into the function. This makes the function flexible.
+
+### SQL Query
+
+```sql
+CREATE OR REPLACE FUNCTION detect_outliers(
+    col text,
+    relation text   -- table or view name
+)
+RETURNS TABLE (
+    opo text,
+    patientid text,
+    value numeric,
+    p01 numeric,
+    p99 numeric
+) AS $$
+BEGIN
+    RETURN QUERY EXECUTE format(
+        $f$
+        WITH vals AS (
+            SELECT
+                opo,
+                patientid,
+                (%1$I)::numeric AS value
+            FROM %2$I
+            WHERE %1$I IS NOT NULL
+        ),
+        bounds AS (
+            SELECT
+                (PERCENTILE_CONT(0.01) WITHIN GROUP (ORDER BY value))::numeric AS p01,
+                (PERCENTILE_CONT(0.99) WITHIN GROUP (ORDER BY value))::numeric AS p99
+            FROM vals
+        )
+        SELECT
+            v.opo,
+            v.patientid,
+            v.value,
+            b.p01,
+            b.p99
+        FROM vals v
+        CROSS JOIN bounds b
+        WHERE v.value < b.p01
+           OR v.value > b.p99
+        ORDER BY v.value;
+        $f$
+        , col, relation
+    );
+END;
+$$ LANGUAGE plpgsql;
+```
+
+#### a. Detect outliers in age
+
+##### SQL Query
+```sql
+SELECT * FROM detect_outliers('age', 'referrals');
+```
+
+##### Results
+![alt text](image-76.png)
+
+#### b. Detect outliers in height
+
+##### SQL Query
+```sql
+SELECT * FROM detect_outliers('heightin', 'referrals');
+```
+
+##### Results
+![alt text](image-77.png)
+
+#### c. Detect outliers in weight
+
+##### SQL Query
+```sql
+SELECT * FROM detect_outliers('weightkg', 'referrals');
+```
+
+##### Results
+![alt text](image-78.png)
+
+
+#### d. Detect outliers in timelines
+##### SQL Query
+```sql
+CREATE OR REPLACE VIEW referral_intervals AS
+SELECT
+    *,
+    EXTRACT(EPOCH FROM (time_procured :: timestamp - time_authorized :: timestamp)) / 3600 AS authorization_to_procurement,
+    EXTRACT(EPOCH FROM (time_approached :: timestamp - time_referred :: timestamp)) / 3600 AS referral_to_approach,
+    EXTRACT(EPOCH FROM (time_authorized :: timestamp - time_approached :: timestamp)) / 3600 AS approach_to_authorization
+FROM referrals
+```
+```sql
+SELECT * FROM detect_outliers('referral_to_approach', 'referral_intervals');
+```
+
+```sql
+SELECT * FROM detect_outliers('authorization_to_procurement', 'referral_intervals');
+```
+```sql
+SELECT * FROM detect_outliers('approach_to_authorization', 'referral_intervals');
+```
+
+##### Results
+###### a. referral_to_approach
+![alt text](image-79.png)
+###### b. authorization_to_procurement
+![alt text](image-81.png)
+###### c.approach_to_authorization
+![alt text](image-80.png)
+
+
 
 
 
